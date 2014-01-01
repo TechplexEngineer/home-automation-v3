@@ -9,6 +9,8 @@
     "express": "3.4.7",
     "jade": "*",
     "less-middleware": "*",
-    "socket.io": "~0.9.16"
+    "socket.io": "~0.9.16",
+    "fibers": "~1.0.1",
+    "underscore": "~1.5.2"
   }
 }

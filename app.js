@@ -8,7 +8,9 @@ var routes = require('./routes');
 var user = require('./routes/user');
 var http = require('http');
 var path = require('path');
-
+var Future = require('fibers/future');
+var _ = require('underscore');
+var exec = require('child_process').exec;
 var app = express();
 
 // all environments
@@ -32,7 +34,11 @@ if ('development' == app.get('env')) {
 
 
 var server = http.createServer(app);
-var io = require('socket.io').listen(server, { log: false });
+var io = require('socket.io').listen(server); //https://github.com/LearnBoost/Socket.IO/wiki/Configuring-Socket.IO
+
+
+io.set('log level', 1);
+
 
 server.listen(app.get('port'), function(){
 	console.log('Express server listening on port ' + app.get('port'));
@@ -43,31 +49,31 @@ app.get('/users', user.list);
 
 io.sockets.on('connection', function (socket) {
 	var updates = setInterval(function () {
-		//use fetchStatus
-		socket.emit('statusEvt', { status: 0xff });
+		socket.emit('statusEvt', { status: fetchStatus() });
 	}, 5*1000);
 	socket.on('disconnect', function () {
     clearInterval(updates);
   });
 	// socket.emit('news', { hello: 'world' });
 	socket.on('forceEvt', function (data) {
-		console.log('forceEvt', data);
-		// { zone: '0', status: 'On' }
-		// { zone: '0', status: 'Off' }
-		// { zone: '0', status: 'Thermostat' }
+		var ret = updateZone(data);
+		console.log('forceEvt', data, ret);
+		// { zone: '0', action: 'On' }
+		// { zone: '0', action: 'Off' }
+		// { zone: '0', action: 'Thermostat' }
 		// updateZone
 	});
 });
-// Somehow we need to persist the times and then act on them later? I wonder if setTimeout would be too slow on the rpi
+// Somehow we need to persist the times and then act on them later?
+// I wonder if setTimeout would be too slow on the rpi
 
 //-----------------------------------------------------------------------------
 function updateZone(args) {
-		var opts = {
-			msg:_buildMessage(args)
-		};
-		return _i2cset(opts)
-	}
-})
+	var opts = {
+		msg:_buildMessage(args)
+	};
+	return _i2cset(opts)
+}
 
 function _buildMessage(args) {
 	args.zone = args.zone - 1; //zones are zero indexed in the i2c link. @todo
@@ -94,11 +100,10 @@ function _i2cset(args) {
 		,msg: 0x00	//hex
 	}
 	var opts = _.extend({}, defaults, args);
-	if (process.env.METEOR_ENV == 'prod')
+
+	var fut = new Future();
+	if (process.env.NODE_ENV == 'prod')
 	{
-		var require = Npm.require;
-		var fut = new Future();
-		var exec = require('child_process').exec;
 		child = exec('/usr/sbin/i2cset -y 1 0x04 0x'+opts.msg, //
 		function (error, stdout, stderr) {
 			if (error !== null) {
@@ -112,7 +117,7 @@ function _i2cset(args) {
 	return 0;
 }
 //-----------------------------------------------------------------------------
-function fetchStatus(args) {
+function fetchStatus() {
 	return _i2cget();
 }
 function _i2cget(args) {
@@ -122,11 +127,8 @@ function _i2cget(args) {
 	}
 	var opts = _.extend({}, defaults, args);
 
-	var require = Npm.require;
 	var fut = new Future();
-	var exec = require('child_process').exec;
-
-	if (process.env.METEOR_ENV == 'prod')
+	if (process.env.NODE_ENV == 'prod')
 	{
 		child = exec('/usr/sbin/i2cget -y '+opts.bus+' '+opts.addy,
 		function (error, stdout, stderr) {

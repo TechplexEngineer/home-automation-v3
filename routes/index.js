@@ -7,28 +7,28 @@ exports.index = function(req, res){
 	var zoneData = [
 		{
 			title: "Master Bed Room"
-			,status: 1
-			,num: 1
+			,status: -1 //1 = on; 0=off; else blue=undef
+			,num: 0
 		},{
 			title: "Blake's Bed Room"
-			,status: 1
-			,num: 2
+			,status: -1
+			,num: 1
 		},{
 			title: "First Floor"
-			,status: 0
-			,num: 3
+			,status: -1
+			,num: 2
 		},{
 			title: "First Floor Radiant"
-			,status: 1
-			,num: 4
+			,status: -1
+			,num: 3
 		},{
 			title: "Domestic Hot Water"
-			,status: 0
-			,num: 5
+			,status: -1
+			,num: 4
 		},{
 			title: "Basement Radiant"
-			,status: 0
-			,num: 6
+			,status: -1
+			,num: 5
 		}
 	];
 	res.render('index', { 

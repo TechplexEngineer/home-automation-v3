@@ -5,18 +5,25 @@ block content
 	.zones
 		table
 				thead
+					th
 					th Zone
 					th Status
 					th Force/Control
+					th Duration
+					th Time Remaining
 				tbody
-					each zone, idx in data
+					each zone in data
+						-var idx = zone.num
 						tr.zone(class="zone_#{ idx }")
+							td= idx
 							td.zone_title= zone.title
 							td.zone_status
-								if zone.status
-									.circle.on
+								if zone.status == 1
+									.circle.on(title="On")
+								else if zone.status == 0
+									.circle.off(title="Off")
 								else
-									.circle.off
+									.circle(title="Unsure")
 							td
 								input(type='radio', name='zone['+idx+']', value='On')
 								| On
@@ -24,6 +31,23 @@ block content
 								| Off
 								input(type='radio', name='zone['+idx+']', value='Thermostat', checked='checked')
 								| Thermostat
+							td
+								//- input(type='checkbox' name='cb_zone['+idx+']')
+								//- |Forever
+								- var options = ['--',1,2,4,8,12,'Forever'];
+								select
+									each hr in options
+										if hr <= 1
+											option(value='#{hr}')
+												|#{hr} hour
+										else if typeof hr === 'string'
+											option(value='#{hr}')
+												|#{hr}
+										else
+											option(value='#{hr}')
+												|#{hr} hours
+							td
+								|--
 
 
 	script(src='/socket.io/socket.io.js', type='text/javascript')
@@ -34,10 +58,10 @@ block content
 			{
 				if (data.status & 1<<i)
 				{
-					$('tr.zone_'+i+' td.zone_status .circle').removeClass('off').addClass('on');
+					$('tr.zone_'+i+' td.zone_status .circle').removeClass('off').addClass('on').attr('title','On');
 				}
 				else
-					$('tr.zone_'+i+' td.zone_status .circle').removeClass('on').addClass('off')
+					$('tr.zone_'+i+' td.zone_status .circle').removeClass('on').addClass('off').attr('title','Off')
 			}
 			//- console.log(data); 
 			//update the status circles
@@ -46,6 +70,6 @@ block content
 			//- console.log($(this).attr('name').match(/zone\[(\d)\]/)[1], $(this).val());
 			socket.emit('forceEvt', {
 				zone: $(this).attr('name').match(/zone\[(\d)\]/)[1]
-				,status: $(this).val()
+				,action: $(this).val()
 			});
 		})
