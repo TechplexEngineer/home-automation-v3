@@ -36,8 +36,7 @@ if ('development' == app.get('env')) {
 var server = http.createServer(app);
 var io = require('socket.io').listen(server); //https://github.com/LearnBoost/Socket.IO/wiki/Configuring-Socket.IO
 
-
-io.set('log level', 1);
+io.set('log level', 3);
 
 
 server.listen(app.get('port'), function(){
@@ -49,11 +48,13 @@ app.get('/users', user.list);
 
 io.sockets.on('connection', function (socket) {
 	var updates = setInterval(function () {
-		socket.emit('statusEvt', { status: fetchStatus() });
+		var data = { status: fetchStatus() };
+		console.log('interval: ',data);
+		socket.emit('statusEvt', data);
 	}, 5*1000);
 	socket.on('disconnect', function () {
-    clearInterval(updates);
-  });
+		clearInterval(updates);
+	});
 	// socket.emit('news', { hello: 'world' });
 	socket.on('forceEvt', function (data) {
 		var ret = updateZone(data);
@@ -114,6 +115,7 @@ function _i2cset(args) {
 
 		return fut.wait();
 	}
+	console.log('env!=prod');
 	return 0;
 }
 //-----------------------------------------------------------------------------
@@ -140,5 +142,6 @@ function _i2cget(args) {
 
 		return fut.wait();
 	}
+	console.log('env!=prod');
 	return 0;
 }
