@@ -102,7 +102,7 @@ function _i2cset(args) {
 	var opts = _.extend({}, defaults, args);
 
 	var fut = new Future();
-	if (process.env.NODE_ENV == 'prod')
+	if (process.env.NODE_ENV == 'prod' || process.env.METEOR_ENV == 'prod')
 	{
 		child = exec('/usr/sbin/i2cset -y 1 0x04 0x'+opts.msg, //
 		function (error, stdout, stderr) {
@@ -128,7 +128,7 @@ function _i2cget(args) {
 	var opts = _.extend({}, defaults, args);
 
 	var fut = new Future();
-	if (process.env.NODE_ENV == 'prod')
+	if (process.env.NODE_ENV == 'prod' || process.env.METEOR_ENV == 'prod')
 	{
 		child = exec('/usr/sbin/i2cget -y '+opts.bus+' '+opts.addy,
 		function (error, stdout, stderr) {
