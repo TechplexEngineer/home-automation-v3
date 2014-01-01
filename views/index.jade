@@ -1,0 +1,51 @@
+extends layout
+
+block content
+	h1= title
+	.zones
+		table
+				thead
+					th Zone
+					th Status
+					th Force/Control
+				tbody
+					each zone, idx in data
+						tr.zone(class="zone_#{ idx }")
+							td.zone_title= zone.title
+							td.zone_status
+								if zone.status
+									.circle.on
+								else
+									.circle.off
+							td
+								input(type='radio', name='zone['+idx+']', value='On')
+								| On
+								input(type='radio', name='zone['+idx+']', value='Off')
+								| Off
+								input(type='radio', name='zone['+idx+']', value='Thermostat', checked='checked')
+								| Thermostat
+
+
+	script(src='/socket.io/socket.io.js', type='text/javascript')
+	script(type='text/javascript').
+		var socket = io.connect('http://localhost');
+		socket.on('statusEvt', function (data) {
+			for (var i=0; i<6; i++)
+			{
+				if (data.status & 1<<i)
+				{
+					$('tr.zone_'+i+' td.zone_status .circle').removeClass('off').addClass('on');
+				}
+				else
+					$('tr.zone_'+i+' td.zone_status .circle').removeClass('on').addClass('off')
+			}
+			//- console.log(data); 
+			//update the status circles
+		});
+		$('input[type="radio"').on('click', function(){
+			//- console.log($(this).attr('name').match(/zone\[(\d)\]/)[1], $(this).val());
+			socket.emit('forceEvt', {
+				zone: $(this).attr('name').match(/zone\[(\d)\]/)[1]
+				,status: $(this).val()
+			});
+		})
